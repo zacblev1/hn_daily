@@ -196,10 +196,27 @@ fn clean_content(html: &str) -> String {
         .collect::<Vec<_>>()
         .join(" ");
     
-    // Clean up whitespace
-    text.split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ")
+    // Clean up whitespace and ensure reasonable line length
+    let mut result = String::with_capacity(text.len());
+    let mut current_line_length = 0;
+    
+    for word in text.split_whitespace() {
+        if current_line_length > 0 {
+            result.push(' ');
+            current_line_length += 1;
+        }
+        
+        result.push_str(word);
+        current_line_length += word.len();
+        
+        // Soft break for very long words
+        if word.len() > 30 {
+            result.push(' ');
+            current_line_length = 0;
+        }
+    }
+    
+    result
 }
 
 fn extract_domain(url: &str) -> Result<String> {
@@ -279,24 +296,31 @@ fn render_html(items: &[Item], contents: &[Option<ScrapedContent>]) -> Result<St
 <html lang=\"en\">\
 <head>\
 <meta charset=\"utf-8\">\
+<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\
 <title>Hacker News Daily – {}</title>\
 <style>\
 body{{font-family:Georgia,serif;margin:0;padding:0;display:flex;flex-direction:column;}}\
 h1{{text-align:center;margin:0;padding:20px 0 10px 0;}}\
 .date{{text-align:center;margin:0 0 20px 0;}}\
 .main-container{{display:flex;flex:1;}}\
-.sidebar{{position:sticky;top:0;width:280px;height:100vh;overflow-y:auto;background:#f8f8f8;padding:15px;box-sizing:border-box;border-right:1px solid #ddd;}}\
-.sidebar h2{{text-align:center;margin-top:0;}}\
-.story-index{{padding-left:20px;}}\
-.story-index li{{margin-bottom:0.8em;font-size:0.9em;}}\
-.articles{{flex:1;padding:20px 40px;overflow-y:auto;max-width:800px;margin:0 auto;}}\
+.sidebar{{position:sticky;top:0;width:240px;height:100vh;overflow-y:auto;background:#f8f8f8;padding:15px;box-sizing:border-box;border-right:1px solid #ddd;}}\
+.sidebar h2{{text-align:center;margin-top:0;font-size:1.2em;}}\
+.story-index{{padding-left:20px;margin:0;}}\
+.story-index li{{margin-bottom:0.8em;font-size:0.85em;}}\
+.articles{{flex:1;padding:20px;overflow-y:auto;box-sizing:border-box;}}\
+.article-container{{max-width:700px;margin:0 auto;}}\
 .story{{margin-bottom:1.5em;}}\
-.story h2{{font-size:1.3em;margin:1em 0 .1em 0;}}\
+.story h2{{font-size:1.2em;margin:1em 0 .1em 0;}}\
 .meta{{font-size:.8em;color:#555;margin:0 0 .5em 0;}}\
 .content{{font-size:0.85em;margin-top:0.5em;}}\
 .domain{{color:#888;font-size:0.9em;margin-bottom:0.3em;}}\
-.full-content{{line-height:1.5;margin-top:1em;}}\
+.full-content{{line-height:1.5;margin-top:1em;overflow-wrap:break-word;word-wrap:break-word;}}\
 .full-content p{{margin:0.7em 0;}}\
+/* Improve content display */\
+.full-content img{{max-width:100%;height:auto;}}\
+.full-content pre, .full-content code{{max-width:100%;overflow-x:auto;white-space:pre-wrap;background:#f5f5f5;padding:2px 4px;border-radius:3px;}}\
+.full-content table{{max-width:100%;overflow-x:auto;border-collapse:collapse;}}\
+.full-content th, .full-content td{{border:1px solid #ddd;padding:4px 8px;}}\
 .paywall-warning{{color:#aa3300;font-style:italic;margin-bottom:0.3em;}}\
 .back-to-top{{display:none;}}\
 hr{{border:0;border-top:1px solid #ddd;margin:2em 0;}}\
@@ -304,7 +328,7 @@ a{{color:#000;text-decoration:none;}}\
 a:hover{{text-decoration:underline;}}\
 a.active{{font-weight:bold;color:#ff6600;}}\
 @media print{{.sidebar{{display:none;}} .articles{{margin:0;max-width:none;}} a{{color:#000}}}}\
-@media (max-width: 800px) {{.main-container{{flex-direction:column;}} .sidebar{{position:static;width:100%;height:auto;}} .articles{{max-width:none;}}}}\
+@media (max-width: 800px) {{.main-container{{flex-direction:column;}} .sidebar{{position:static;width:100%;height:auto;}} .articles{{padding:15px;}}}}\
 </style>\
 <script>\
 function highlightActive() {{\
@@ -346,7 +370,9 @@ document.addEventListener('DOMContentLoaded', highlightActive);\
   </div>\
 \
   <div class=\"articles\">\
-  {}\
+    <div class=\"article-container\">\
+      {}\
+    </div>\
   </div>\
 </div>\
 \
