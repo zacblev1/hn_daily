@@ -1,0 +1,12 @@
+/target
+**/*.rs.bk
+*.pdb
+*.swp
+*~
+.DS_Store
+Cargo.lock
+
+# Generated output files
+*.html
+*.txt
+*.pdf
