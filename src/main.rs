@@ -326,35 +326,65 @@ h1{{text-align:center;margin:0;padding:20px 0 10px 0;}}\
 hr{{border:0;border-top:1px solid #ddd;margin:2em 0;}}\
 a{{color:#000;text-decoration:none;}}\
 a:hover{{text-decoration:underline;}}\
-a.active{{font-weight:bold;color:#ff6600;}}\
+a.active{{font-weight:bold;color:#ff6600;background:#fff3e0;padding:2px 5px;border-radius:3px;margin-left:-5px;}}\
 @media print{{.sidebar{{display:none;}} .articles{{margin:0;max-width:none;}} a{{color:#000}}}}\
 @media (max-width: 800px) {{.main-container{{flex-direction:column;}} .sidebar{{position:static;width:100%;height:auto;}} .articles{{padding:15px;}}}}\
 </style>\
 <script>\
-function highlightActive() {{\
-  const articles = document.querySelectorAll('.story');\
-  const links = document.querySelectorAll('.story-index a');\
+// Handle direct click navigation and sync with scroll position
+document.addEventListener(\"DOMContentLoaded\", function() {{\
+  const articles = document.querySelectorAll(\".story\");\
+  const links = document.querySelectorAll(\".story-index a\");\
+  
+  // Handle link clicks
+  links.forEach(link => {{\
+    link.addEventListener(\"click\", function(e) {{\
+      // Remove active class from all links
+      links.forEach(l => l.classList.remove(\"active\"));\
+      // Add active class to clicked link
+      this.classList.add(\"active\");\
+    }});\
+  }});\
+  
+  // Use a better IntersectionObserver for scroll highlighting
+  const observerOptions = {{\
+    root: null, // viewport
+    rootMargin: \"-100px 0px -300px 0px\", // top, right, bottom, left margins
+    threshold: 0.2 // 20% of the element should be visible
+  }};\
+  
+  let currentActiveLink = null;\
+  
   const observer = new IntersectionObserver((entries) => {{\
     entries.forEach(entry => {{\
-      if (entry.isIntersecting) {{\
+      // When an article comes into view
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.2) {{\
         const id = entry.target.id;\
-        links.forEach(link => {{\
-          if (link.getAttribute('href') === '#' + id) {{\
-            link.classList.add('active');\
-          }} else {{\
-            link.classList.remove('active');\
-          }}\
-        }});\
+        const targetLink = document.querySelector(\".story-index a[href='#\" + id + \"']\");\
+        
+        if (targetLink && targetLink !== currentActiveLink) {{\
+          // Remove active class from all links
+          links.forEach(link => link.classList.remove(\"active\"));\
+          
+          // Add active class to corresponding link
+          targetLink.classList.add(\"active\");\
+          currentActiveLink = targetLink;\
+        }}\
       }}\
     }});\
-  }}, {{ threshold: 0.5 }});\
-  \
+  }}, observerOptions);\
+  
+  // Observe all articles
   articles.forEach(article => {{\
     observer.observe(article);\
   }});\
-}}\
-\
-document.addEventListener('DOMContentLoaded', highlightActive);\
+  
+  // Set the first item as active by default if we're at the top of the page
+  if (window.scrollY < 100 && links.length > 0) {{\
+    links[0].classList.add(\"active\");\
+    currentActiveLink = links[0];\
+  }}\
+}});\
 </script>\
 </head>\
 <body>\
