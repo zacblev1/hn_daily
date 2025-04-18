@@ -246,7 +246,6 @@ fn render_html(items: &[Item], contents: &[Option<ScrapedContent>]) -> Result<St
                     <div class=\"domain\">{}</div>\
                     {}\
                     <div class=\"full-content\">{}</div>\
-                    <p class=\"back-to-top\"><a href=\"#\">↑ Back to index</a></p>\
                     </div>",
                     content.domain,
                     paywall_warning,
@@ -255,7 +254,6 @@ fn render_html(items: &[Item], contents: &[Option<ScrapedContent>]) -> Result<St
             },
             _ => "<div class=\"content\">\
                   <em>Could not retrieve content</em>\
-                  <p class=\"back-to-top\"><a href=\"#\">↑ Back to index</a></p>\
                   </div>".to_string(),
         };
         
@@ -283,12 +281,15 @@ fn render_html(items: &[Item], contents: &[Option<ScrapedContent>]) -> Result<St
 <meta charset=\"utf-8\">\
 <title>Hacker News Daily – {}</title>\
 <style>\
-body{{font-family:Georgia,serif;margin:1in;}}\
-h1{{text-align:center;margin:0 0 .2in 0;}}\
-.index-container{{margin-bottom:2em;}}\
-.index-container h2{{text-align:center;}}\
-.story-index{{columns:2;column-gap:2em;margin:0 auto;max-width:90%;}}\
-.story-index li{{margin-bottom:0.5em;}}\
+body{{font-family:Georgia,serif;margin:0;padding:0;display:flex;flex-direction:column;}}\
+h1{{text-align:center;margin:0;padding:20px 0 10px 0;}}\
+.date{{text-align:center;margin:0 0 20px 0;}}\
+.main-container{{display:flex;flex:1;}}\
+.sidebar{{position:sticky;top:0;width:280px;height:100vh;overflow-y:auto;background:#f8f8f8;padding:15px;box-sizing:border-box;border-right:1px solid #ddd;}}\
+.sidebar h2{{text-align:center;margin-top:0;}}\
+.story-index{{padding-left:20px;}}\
+.story-index li{{margin-bottom:0.8em;font-size:0.9em;}}\
+.articles{{flex:1;padding:20px 40px;overflow-y:auto;max-width:800px;margin:0 auto;}}\
 .story{{margin-bottom:1.5em;}}\
 .story h2{{font-size:1.3em;margin:1em 0 .1em 0;}}\
 .meta{{font-size:.8em;color:#555;margin:0 0 .5em 0;}}\
@@ -297,26 +298,56 @@ h1{{text-align:center;margin:0 0 .2in 0;}}\
 .full-content{{line-height:1.5;margin-top:1em;}}\
 .full-content p{{margin:0.7em 0;}}\
 .paywall-warning{{color:#aa3300;font-style:italic;margin-bottom:0.3em;}}\
-.back-to-top{{text-align:right;margin-top:1em;}}\
+.back-to-top{{display:none;}}\
 hr{{border:0;border-top:1px solid #ddd;margin:2em 0;}}\
 a{{color:#000;text-decoration:none;}}\
 a:hover{{text-decoration:underline;}}\
-@media print{{a{{color:#000}}}}\
+a.active{{font-weight:bold;color:#ff6600;}}\
+@media print{{.sidebar{{display:none;}} .articles{{margin:0;max-width:none;}} a{{color:#000}}}}\
+@media (max-width: 800px) {{.main-container{{flex-direction:column;}} .sidebar{{position:static;width:100%;height:auto;}} .articles{{max-width:none;}}}}\
 </style>\
+<script>\
+function highlightActive() {{\
+  const articles = document.querySelectorAll('.story');\
+  const links = document.querySelectorAll('.story-index a');\
+  const observer = new IntersectionObserver((entries) => {{\
+    entries.forEach(entry => {{\
+      if (entry.isIntersecting) {{\
+        const id = entry.target.id;\
+        links.forEach(link => {{\
+          if (link.getAttribute('href') === '#' + id) {{\
+            link.classList.add('active');\
+          }} else {{\
+            link.classList.remove('active');\
+          }}\
+        }});\
+      }}\
+    }});\
+  }}, {{ threshold: 0.5 }});\
+  \
+  articles.forEach(article => {{\
+    observer.observe(article);\
+  }});\
+}}\
+\
+document.addEventListener('DOMContentLoaded', highlightActive);\
+</script>\
 </head>\
 <body>\
 <h1>Hacker News Daily</h1>\
-<p style=\"text-align:center\">{}</p>\
+<p class=\"date\">{}</p>\
 \
-<div class=\"index-container\">\
-  <h2>Article Index</h2>\
-  <ol class=\"story-index\">\
-    {}\
-  </ol>\
-</div>\
+<div class=\"main-container\">\
+  <div class=\"sidebar\">\
+    <h2>Article Index</h2>\
+    <ol class=\"story-index\">\
+      {}\
+    </ol>\
+  </div>\
 \
-<div class=\"articles\">\
-{}\
+  <div class=\"articles\">\
+  {}\
+  </div>\
 </div>\
 \
 </body></html>",

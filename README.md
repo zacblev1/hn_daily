@@ -7,7 +7,7 @@ A simple utility that creates a daily digest of top Hacker News stories in a rea
 - Fetches top 30 stories from Hacker News
 - Retrieves full article content from linked pages with paywall detection
 - Uses readability algorithms to extract clean article text
-- Generates HTML with an interactive index for easy navigation between articles
+- Generates HTML with a fixed sidebar index for easy navigation between articles
 - Shows complete article content for each story
 - Creates a plain text version for easy reading
 - Optionally creates a PDF if wkhtmltopdf is installed
